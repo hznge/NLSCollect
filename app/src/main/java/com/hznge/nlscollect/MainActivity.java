@@ -22,7 +22,7 @@ import android.widget.TextView;
 public class MainActivity extends Activity {
 
     private static final String TAG = "SevenNLS";
-    private static final String TAG_PRE = "["+MainActivity.class.getSimpleName()+"] ";
+    private static final String TAG_PRE = "[" + MainActivity.class.getSimpleName() + "] ";
     private static final int EVENT_SHOW_CREATE_NOS = 0;
     private static final int EVENT_LIST_CURRENT_NOS = 1;
     private static final String ENABLED_NOTIFICATION_LISTENERS = "enabled_notification_listeners";
@@ -121,7 +121,7 @@ public class MainActivity extends Activity {
         ncBuilder.setTicker("Notification Listener Service Example");
         ncBuilder.setSmallIcon(R.mipmap.ic_launcher);
         ncBuilder.setAutoCancel(true);
-        manager.notify((int)System.currentTimeMillis(),ncBuilder.build());
+        manager.notify((int) System.currentTimeMillis(), ncBuilder.build());
     }
 
     private void cancelNotification(Context context, boolean isCancelAll) {
@@ -129,7 +129,7 @@ public class MainActivity extends Activity {
         intent.setAction(NotificationMonitor.ACTION_NLS_CONTROL);
         if (isCancelAll) {
             intent.putExtra("command", "cancel_all");
-        }else {
+        } else {
             intent.putExtra("command", "cancel_last");
         }
         context.sendBroadcast(intent);
@@ -140,7 +140,7 @@ public class MainActivity extends Activity {
         StatusBarNotification[] currentNos = NotificationMonitor.getCurrentNotifications();
         if (currentNos != null) {
             for (int i = 0; i < currentNos.length; i++) {
-                listNos = i +" " + currentNos[i].getPackageName() + "\n" + listNos;
+                listNos = i + " " + currentNos[i].getPackageName() + "\n" + listNos;
             }
         }
         return listNos;
@@ -156,12 +156,12 @@ public class MainActivity extends Activity {
             int n = NotificationMonitor.mCurrentNotificationsCounts;
             if (n == 0) {
                 result = getResources().getString(R.string.active_notification_count_zero);
-            }else {
+            } else {
                 result = String.format(getResources().getQuantityString(R.plurals.active_notification_count_nonzero, n, n));
             }
             result = result + "\n" + getCurrentNotificationString();
             mTextView.setText(result);
-        }else {
+        } else {
             mTextView.setTextColor(Color.RED);
             mTextView.setText("Please Enable Notification Access");
         }
@@ -169,8 +169,8 @@ public class MainActivity extends Activity {
 
     private void clearLastNotification() {
         if (isEnabledNLS) {
-            cancelNotification(this,false);
-        }else {
+            cancelNotification(this, false);
+        } else {
             mTextView.setTextColor(Color.RED);
             mTextView.setText("Please Enable Notification Access");
         }
@@ -178,8 +178,8 @@ public class MainActivity extends Activity {
 
     private void clearAllNotifications() {
         if (isEnabledNLS) {
-            cancelNotification(this,true);
-        }else {
+            cancelNotification(this, true);
+        } else {
             mTextView.setTextColor(Color.RED);
             mTextView.setText("Please Enable Notification Access");
         }
@@ -187,11 +187,11 @@ public class MainActivity extends Activity {
 
     private void showCreateNotification() {
         if (NotificationMonitor.mPostedNotification != null) {
-            String result = NotificationMonitor.mPostedNotification.getPackageName()+"\n"
-                    + NotificationMonitor.mPostedNotification.getTag()+"\n"
-                    + NotificationMonitor.mPostedNotification.getId()+"\n"+"\n"
+            String result = NotificationMonitor.mPostedNotification.getPackageName() + "\n"
+                    + NotificationMonitor.mPostedNotification.getTag() + "\n"
+                    + NotificationMonitor.mPostedNotification.getId() + "\n" + "\n"
                     + mTextView.getText();
-            result = "Create notification:"+"\n"+result;
+            result = "Create notification:" + "\n" + result;
             mTextView.setText(result);
         }
     }
@@ -222,6 +222,6 @@ public class MainActivity extends Activity {
     }
 
     private void logNLS(Object object) {
-        Log.i(TAG, TAG_PRE+object);
+        Log.i(TAG, TAG_PRE + object);
     }
 }

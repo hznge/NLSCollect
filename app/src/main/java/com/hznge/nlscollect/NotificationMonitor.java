@@ -1,14 +1,19 @@
 package com.hznge.nlscollect;
 
+import android.app.Notification;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
+import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -16,10 +21,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NotificationMonitor extends NotificationListenerService {
+    public static final String ACTION_NLS_CONTROL = "com.seven.notificationlistenerdemo.NLSCONTROL";
     private static final String TAG = "SevenNLS";
     private static final String TAG_PRE = "[" + NotificationMonitor.class.getSimpleName() + "] ";
     private static final int EVENT_UPDATE_CURRENT_NOS = 0;
-    public static final String ACTION_NLS_CONTROL = "com.seven.notificationlistenerdemo.NLSCONTROL";
     public static List<StatusBarNotification[]> mCurrentNotifications = new ArrayList<StatusBarNotification[]>();
     public static int mCurrentNotificationsCounts = 0;
     public static StatusBarNotification mPostedNotification;
@@ -40,27 +45,16 @@ public class NotificationMonitor extends NotificationListenerService {
         }
     };
 
-    class CancelNotificationReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action;
-            if (intent != null && intent.getAction() != null) {
-                action = intent.getAction();
-                if (action.equals(ACTION_NLS_CONTROL)) {
-                    String command = intent.getStringExtra("command");
-                    if (TextUtils.equals(command, "cancel_last")) {
-                        if (mCurrentNotifications != null && mCurrentNotificationsCounts >= 1) {
-                            StatusBarNotification sbnn = getCurrentNotifications()[mCurrentNotificationsCounts - 1];
-                            cancelNotification(sbnn.getPackageName(), sbnn.getTag(), sbnn.getId());
-                        }
-                    } else if (TextUtils.equals(command, "cancel_all")) {
-                        cancelAllNotifications();
-                    }
-                }
-            }
+    public static StatusBarNotification[] getCurrentNotifications() {
+        if (mCurrentNotifications.size() == 0) {
+            logNLS("mCurrentNotifications size is ZERO!!");
+            return null;
         }
+        return mCurrentNotifications.get(0);
+    }
 
+    private static void logNLS(Object object) {
+        Log.i(TAG, TAG_PRE + object);
     }
 
     @Override
@@ -86,6 +80,7 @@ public class NotificationMonitor extends NotificationListenerService {
         return super.onBind(intent);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         updateCurrentNotifications();
@@ -93,24 +88,21 @@ public class NotificationMonitor extends NotificationListenerService {
         logNLS("have " + mCurrentNotificationsCounts + " active notifications");
         mPostedNotification = sbn;
 
-        /*
-         * Bundle extras = sbn.getNotification().extras; String
-         * notificationTitle = extras.getString(Notification.EXTRA_TITLE);
-         * Bitmap notificationLargeIcon = ((Bitmap)
-         * extras.getParcelable(Notification.EXTRA_LARGE_ICON)); Bitmap
-         * notificationSmallIcon = ((Bitmap)
-         * extras.getParcelable(Notification.EXTRA_SMALL_ICON)); CharSequence
-         * notificationText = extras.getCharSequence(Notification.EXTRA_TEXT);
-         * CharSequence notificationSubText =
-         * extras.getCharSequence(Notification.EXTRA_SUB_TEXT);
-         * Log.i("SevenNLS", "notificationTitle:"+notificationTitle);
-         * Log.i("SevenNLS", "notificationText:"+notificationText);
-         * Log.i("SevenNLS", "notificationSubText:"+notificationSubText);
-         * Log.i("SevenNLS",
-         * "notificationLargeIcon is null:"+(notificationLargeIcon == null));
-         * Log.i("SevenNLS",
-         * "notificationSmallIcon is null:"+(notificationSmallIcon == null));
-         */
+        Bundle extras = sbn.getNotification().extras;
+        String notificationTitle = extras.getString(Notification.EXTRA_TITLE);
+        Bitmap notificationLargeIcon = extras.getParcelable(Notification.EXTRA_LARGE_ICON);
+        Bitmap notificationSmallIcon = extras.getParcelable(Notification.EXTRA_SMALL_ICON);
+        CharSequence notificationText =
+                extras.getCharSequence(Notification.EXTRA_TEXT);
+        CharSequence notificationSubText =
+                extras.getCharSequence(Notification.EXTRA_SUB_TEXT);
+        Log.i("SevenNLS", "notificationTitle:" + notificationTitle);
+        Log.i("SevenNLS", "notificationText:" + notificationText);
+        Log.i("SevenNLS", "notificationSubText:" + notificationSubText);
+        Log.i("SevenNLS",
+                "notificationLargeIcon is null:" + (notificationLargeIcon == null));
+        Log.i("SevenNLS",
+                "notificationSmallIcon is null:" + (notificationSmallIcon == null));
     }
 
     @Override
@@ -135,16 +127,31 @@ public class NotificationMonitor extends NotificationListenerService {
         }
     }
 
-    public static StatusBarNotification[] getCurrentNotifications() {
-        if (mCurrentNotifications.size() == 0) {
-            logNLS("mCurrentNotifications size is ZERO!!");
-            return null;
-        }
-        return mCurrentNotifications.get(0);
-    }
+    class CancelNotificationReceiver extends BroadcastReceiver {
 
-    private static void logNLS(Object object) {
-        Log.i(TAG, TAG_PRE + object);
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action;
+            if (intent != null && intent.getAction() != null) {
+                action = intent.getAction();
+                if (action.equals(ACTION_NLS_CONTROL)) {
+                    String command = intent.getStringExtra("command");
+                    if (TextUtils.equals(command, "cancel_last")) {
+                        if (mCurrentNotifications != null && mCurrentNotificationsCounts >= 1) {
+                            StatusBarNotification sbnn = getCurrentNotifications()[mCurrentNotificationsCounts - 1];
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                cancelNotification(sbnn.getKey());
+                            } else {
+                                cancelNotification(sbnn.getPackageName(), sbnn.getTag(), sbnn.getId());
+                            }
+                        }
+                    } else if (TextUtils.equals(command, "cancel_all")) {
+                        cancelAllNotifications();
+                    }
+                }
+            }
+        }
+
     }
 
 }
